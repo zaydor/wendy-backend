@@ -1,6 +1,7 @@
 from functools import wraps
 from flask import session, redirect
 from datetime import datetime
+from flask import request
 
 
 def login_required(f):
@@ -24,3 +25,17 @@ def active_spotify_session_required(f):
         return f(*args, **kwargs)
 
     return decorated_function
+
+
+def validate_form(form_class):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            form = form_class(request.form)
+            if not form.validate():
+                return redirect(request.url)
+            return f(*args, form=form, **kwargs)
+
+        return decorated_function
+
+    return decorator

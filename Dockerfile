@@ -10,11 +10,8 @@ COPY . /app
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Create a python virtual environment
-RUN uv venv
-
-# Install dependencies
-RUN uv pip install -r requirements.txt
+# Create virtual environment and install dependencies
+RUN uv venv && uv pip install -r requirements.txt
 
 # Expose port 5000 for Flask
 EXPOSE 5050
