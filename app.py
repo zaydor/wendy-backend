@@ -1,7 +1,8 @@
 from datetime import datetime
-from wrappers import login_required, active_spotify_session_required
+from wrappers import login_required, active_spotify_session_required, validate_form
 from flask import Flask, flash, jsonify, redirect, request, session
 from flask_cors import CORS
+from forms import RegistrationForm, LoginForm
 import requests
 import os
 from dotenv import load_dotenv
@@ -68,6 +69,7 @@ def register_get():
     <form method="post" action="http://localhost:5050/register">
       Email: <input name="email"><br>
       Password: <input name="password" type="password"><br>
+      Confirm Password: <input name="confirm" type="password"><br>
       Name: <input name="name"><br>
       <button type="submit">Register</button>
     </form>
@@ -76,11 +78,11 @@ def register_get():
 
 
 @app.route("/register", methods=["POST"])
-def register_post():
-    result = request.form
-    email = result["email"]
-    password = result["password"]
-    name = result["name"]
+@validate_form(RegistrationForm)
+def register_post(form):
+    email = form.email.data
+    password = form.password.data
+    name = form.name.data
     try:
         # create user in Firebase
         auth.create_user_with_email_and_password(email, password)
@@ -111,10 +113,10 @@ def result_get():
 
 
 @app.route("/result", methods=["POST"])
-def result_post():
-    result = request.form
-    email = result["email"]
-    password = result["password"]
+@validate_form(LoginForm)
+def result_post(form):
+    email = form.email.data
+    password = form.password.data
     try:
         user = auth.sign_in_with_email_and_password(email, password)
         session["is_logged_in"] = True
@@ -239,7 +241,6 @@ def spotifytoken():
 @active_spotify_session_required
 def playlists():
     playlist_id = request.args.get("playlist_id", "2vZX9OzU7tcqCt6TC4ZECE")
-
     PLAYLIST_URL = f"{API_BASE_URL}/playlists/{playlist_id}"
     headers = {
         "Authorization": f"Bearer {session['access_token']}",
@@ -302,11 +303,7 @@ def transfer_playback():
         "play": play,
     }
 
-    response = requests.put(
-        f"{API_BASE_URL}/me/player",
-        headers=headers,
-        data=data,
-    )
+    response = requests.put(f"{API_BASE_URL}/me/player", headers=headers, json=data)
     if response.status_code == 204:
         return jsonify({"message": "Playback transferred successfully"})
     return jsonify({"error": "Failed to transfer playback"}), 400
@@ -356,6 +353,7 @@ def start_playback():
         "Authorization": f"Bearer {session['access_token']}",
         "Content-Type": "application/json",
     }
+    params = {"device_id": device_id}
     data = {
         "context_uri": context_uri,
         "uris": uris,
@@ -364,8 +362,9 @@ def start_playback():
     }
 
     response = requests.put(
-        f"{API_BASE_URL}/me/player/play?device_id={device_id}",
+        f"{API_BASE_URL}/me/player/play",
         headers=headers,
+        params=params,
         json=data,
     )
     if response.status_code == 204:
@@ -381,10 +380,9 @@ def pause_playback():
     headers = {
         "Authorization": f"Bearer {session['access_token']}",
     }
-
+    params = {"device_id": device_id}
     response = requests.put(
-        f"{API_BASE_URL}/me/player/pause?device_id={device_id}",
-        headers=headers,
+        f"{API_BASE_URL}/me/player/pause", headers=headers, params=params
     )
     if response.status_code == 204:
         return jsonify({"message": "Playback paused successfully"})
@@ -399,9 +397,13 @@ def skip_to_next_track():
     headers = {
         "Authorization": f"Bearer {session['access_token']}",
     }
+    params = {
+        "device_id": device_id,
+    }
     response = requests.post(
-        f"{API_BASE_URL}/me/player/next?device_id={device_id}",
+        f"{API_BASE_URL}/me/player/next",
         headers=headers,
+        params=params,
     )
     if response.status_code == 204:
         return jsonify({"message": "Skipped to next track successfully"})
@@ -416,9 +418,13 @@ def skip_to_previous_track():
     headers = {
         "Authorization": f"Bearer {session['access_token']}",
     }
+    params = {
+        "device_id": device_id,
+    }
     response = requests.post(
-        f"{API_BASE_URL}/me/player/previous?device_id={device_id}",
+        f"{API_BASE_URL}/me/player/previous",
         headers=headers,
+        params=params,
     )
     if response.status_code == 204:
         return jsonify({"message": "Skipped to previous track successfully"})
@@ -434,10 +440,15 @@ def seek_to_position():
     headers = {
         "Authorization": f"Bearer {session['access_token']}",
     }
+    params = {
+        "position_ms": position_ms,
+        "device_id": device_id,
+    }
 
     response = requests.put(
-        f"{API_BASE_URL}/me/player/seek?device_id={device_id}&position_ms={position_ms}",
+        f"{API_BASE_URL}/me/player/seek",
         headers=headers,
+        params=params,
     )
 
     if response.status_code == 204:
@@ -454,10 +465,15 @@ def set_repeat_mode():
     headers = {
         "Authorization": f"Bearer {session['access_token']}",
     }
+    params = {
+        "state": state,
+        "device_id": device_id,
+    }
 
     response = requests.put(
-        f"{API_BASE_URL}/me/player/repeat?state={state}&device_id={device_id}",
+        f"{API_BASE_URL}/me/player/repeat",
         headers=headers,
+        params=params,
     )
 
     if response.status_code == 204:
@@ -474,10 +490,15 @@ def toggle_shuffle():
     headers = {
         "Authorization": f"Bearer {session['access_token']}",
     }
+    params = {
+        "state": state,
+        "device_id": device_id,
+    }
 
     response = requests.put(
-        f"{API_BASE_URL}/me/player/shuffle?state={state}&device_id={device_id}",
+        f"{API_BASE_URL}/me/player/shuffle",
         headers=headers,
+        params=params,
     )
     if response.status_code == 204:
         return jsonify({"message": "Shuffle mode toggled successfully"})
@@ -539,10 +560,9 @@ def add_item_to_queue():
     headers = {
         "Authorization": f"Bearer {session['access_token']}",
     }
-
+    params = {"uri": uri, "device_id": device_id}
     response = requests.post(
-        f"{API_BASE_URL}/me/player/queue?uri={uri}&device_id={device_id}",
-        headers=headers,
+        f"{API_BASE_URL}/me/player/queue", headers=headers, params=params
     )
 
     if response.status_code == 204:
