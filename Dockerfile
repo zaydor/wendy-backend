@@ -13,8 +13,5 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 # Create virtual environment and install dependencies
 RUN uv venv && uv pip install -r requirements.txt
 
-# Expose port 5000 for Flask
-EXPOSE 5050
-
 # Command to run the app
-CMD ["uv", "run", "app.py"]
+CMD .venv/bin/gunicorn --bind 0.0.0.0:5050 app:app
