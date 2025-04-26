@@ -46,7 +46,9 @@ db = firebase.database()
 
 @app.route("/")
 def home():
-    return "Hello World!"
+    import socket
+
+    return f"Hello World! {socket.gethostname()}"
 
 
 @app.route("/login", methods=["GET"])
