@@ -5,7 +5,7 @@ FROM python:3.13.3-slim-bullseye
 WORKDIR /app
 
 # Copy project files into container
-COPY . /app
+COPY ./app/. /app
 
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
