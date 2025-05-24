@@ -1,5 +1,13 @@
 services:
+  redis:
+    image: redis:latest
+    ports:
+      - "6379"
+    restart: unless-stopped
   flask:
+    environment:
+      - PYTHONUNBUFFERED=1
+      - REDIS_HOST=redis
     build: .
     ports:
       - "5050"

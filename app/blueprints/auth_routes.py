@@ -1,12 +1,12 @@
 from datetime import datetime
-from flask import Blueprint, session, redirect
 
+from flask import Blueprint, session
 from helpers import (
-    login_required,
-    validate_form,
+    FirebaseHelper,
     LoginForm,
     RegistrationForm,
-    FirebaseHelper,
+    login_required,
+    validate_form,
 )
 
 
@@ -29,35 +29,9 @@ class AuthRoutes:
 
             return f"Hello World! {socket.gethostname()}"
 
-        @bp.route("/login", methods=["GET"])
-        def login():
-            return """
-            <h1>Login</h1>
-            <form method="post" action="http://localhost/result">
-              Email: <input name="email"><br>
-              Password: <input name="password" type="password"><br>
-              <button type="submit">Log In</button>
-            </form>
-            <a href="http://localhost/register">Create an account</a>
-            """
-
-        @bp.route("/register", methods=["GET"])
-        def register_get():
-            return """
-            <h1>Register</h1>
-            <form method="post" action="http://localhost/register">
-              Email: <input name="email"><br>
-              Password: <input name="password" type="password"><br>
-              Confirm Password: <input name="confirm" type="password"><br>
-              Name: <input name="name"><br>
-              <button type="submit">Register</button>
-            </form>
-            <a href="http://localhost/login">Already a user?</a>
-            """
-
         @bp.route("/register", methods=["POST"])
         @validate_form(RegistrationForm)
-        def register_post(form):
+        def register(form):
             email = form.email.data
             password = form.password.data
             name = form.name.data
@@ -74,24 +48,36 @@ class AuthRoutes:
                     "last_logged_in": datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
                 }
                 db.child("users").child(session["uid"]).set(data)
-                return redirect("/authorize")
+                return (
+                    {
+                        "Access-Control-Allow-Credentials": "true",
+                        "message": "Login successful",
+                        "user": {
+                            "name": session["name"],
+                            "email": session["email"],
+                            "uid": session["uid"],
+                        },
+                    },
+                    200,
+                )
             except Exception as e:
-                bp.logger.error(f"Error: {e}")
-                bp.logger.error("Registration failed. Please try again.")
-                return redirect("/register")
+                return (
+                    {
+                        "Access-Control-Allow-Credentials": "true",
+                        "message": "Register failed",
+                        "error": str(e),
+                    },
+                    401,
+                )
 
-        @bp.route("/result", methods=["GET"])
-        @login_required
-        def result_get():
-            return redirect("/profile")
-
-        @bp.route("/result", methods=["POST"])
+        @bp.route("/login", methods=["POST"])
         @validate_form(LoginForm)
-        def result_post(form):
+        def login(form):
             email = form.email.data
             password = form.password.data
             try:
                 user = auth.sign_in_with_email_and_password(email, password)
+
                 session["is_logged_in"] = True
                 session["email"] = email
                 session["uid"] = user["localId"]
@@ -111,27 +97,27 @@ class AuthRoutes:
                 else:
                     session["name"] = "User"
 
-                return redirect("/profile")
+                return (
+                    {
+                        "Access-Control-Allow-Credentials": "true",
+                        "message": "Login successful",
+                        "user": {
+                            "name": session["name"],
+                            "email": session["email"],
+                            "uid": session["uid"],
+                        },
+                    },
+                    200,
+                )
             except Exception as e:
-                bp.logger.error(f"Error: {e}")
-                return redirect("/login")
-
-        @bp.route("/profile")
-        @login_required
-        def profile():
-            return f"""
-            <h1>Hello, {session.get("name")}</h1>
-            <br>
-            <a href='/logout'>Logout</a>
-            <br>
-            <a href='/authorize'>Authorize Spotify</a>
-            <br>
-            <a href='/spotifytoken'>Get Spotify Token</a>
-            <br>
-            <a href='/playlists'>Get Playlists</a>
-            <br>
-            <a href='/playlists/tracks'>Get Playlist Tracks</a>
-            """
+                return (
+                    {
+                        "Access-Control-Allow-Credentials": "true",
+                        "message": "Login failed",
+                        "error": str(e),
+                    },
+                    401,
+                )
 
         @bp.route("/logout")
         @login_required
@@ -140,4 +126,27 @@ class AuthRoutes:
                 {"last_logged_out": datetime.now().strftime("%m/%d/%Y, %H:%M:%S")}
             )
             session["is_logged_in"] = False
-            return redirect("/login")
+            return (
+                {
+                    "Access-Control-Allow-Credentials": "true",
+                    "message": "Logout successful",
+                },
+                200,
+            )
+
+        # @bp.route("/profile")
+        # @login_required
+        # def profile():
+        #     return f"""
+        #     <h1>Hello, {session.get("name")}</h1>
+        #     <br>
+        #     <a href='/logout'>Logout</a>
+        #     <br>
+        #     <a href='/authorize'>Authorize Spotify</a>
+        #     <br>
+        #     <a href='/spotifytoken'>Get Spotify Token</a>
+        #     <br>
+        #     <a href='/playlists'>Get Playlists</a>
+        #     <br>
+        #     <a href='/playlists/tracks'>Get Playlist Tracks</a>
+        #     """
