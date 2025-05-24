@@ -1,8 +1,9 @@
-from flask import Blueprint, session, redirect, request, jsonify
-from helpers import login_required, active_spotify_session_required, FirebaseHelper
-from datetime import datetime
-import requests
 import os
+from datetime import datetime
+
+import requests
+from flask import Blueprint, jsonify, redirect, request, session
+from helpers import FirebaseHelper, active_spotify_session_required, login_required
 
 
 class SpotifyRoutes:

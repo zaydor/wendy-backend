@@ -1,5 +1,6 @@
-import pyrebase
 import os
+
+import pyrebase
 
 
 class FirebaseHelper:

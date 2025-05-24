@@ -1,11 +1,11 @@
-from wtforms import Form, StringField, PasswordField, validators
+from wtforms import Form, PasswordField, StringField, validators
 
 
 class RegistrationForm(Form):
-    name = StringField("Name", [validators.Length(min=1, max=50)])
-    email = StringField("Email", [validators.Length(min=6, max=50), validators.Email()])
+    name = StringField("name", [validators.Length(min=1, max=50)])
+    email = StringField("email", [validators.Length(min=6, max=50), validators.Email()])
     password = PasswordField(
-        "Password",
+        "password",
         [
             validators.DataRequired(),
             validators.EqualTo("confirm", message="Passwords must match"),
@@ -15,9 +15,9 @@ class RegistrationForm(Form):
 
 
 class LoginForm(Form):
-    email = StringField("Email", [validators.Length(min=6, max=50), validators.Email()])
+    email = StringField("email", [validators.Length(min=6, max=50), validators.Email()])
     password = PasswordField(
-        "Password",
+        "password",
         [
             validators.DataRequired(),
         ],
