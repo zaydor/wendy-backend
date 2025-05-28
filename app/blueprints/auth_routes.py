@@ -134,6 +134,20 @@ class AuthRoutes:
                 200,
             )
 
+        @bp.route("/me")
+        @login_required
+        def me():
+            return (
+                {
+                    "user": {
+                        "name": session["name"],
+                        "email": session["email"],
+                        "uid": session["uid"],
+                    },
+                },
+                200,
+            )
+
         # @bp.route("/profile")
         # @login_required
         # def profile():

@@ -7,7 +7,8 @@ from flask import redirect, request, session
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if session.get("is_logged_in", True):
+        print(f"{session=}")
+        if session.get("is_logged_in", False):
             return f(*args, **kwargs)
         return ({"message": "User not logged in"}, 403)
 
