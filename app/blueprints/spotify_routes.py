@@ -11,7 +11,7 @@ class SpotifyRoutes:
         self.spotify_bp = Blueprint("spotify", __name__)
         self.SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
         self.SPOTIFY_SECRET = os.getenv("SPOTIFY_SECRET")
-        self.REDIRECT_URI = "http://localhost/callback"
+        self.REDIRECT_URI = "http://127.0.0.1/callback"
         self.AUTH_URL = "https://accounts.spotify.com/authorize"
         self.TOKEN_URL = "https://accounts.spotify.com/api/token"
         self.API_BASE_URL = "https://api.spotify.com/v1"
@@ -23,24 +23,31 @@ class SpotifyRoutes:
         @bp.route("/authorize")
         @login_required
         def authorize():
+            redirect_uri = request.args.get("redirect_uri", self.REDIRECT_URI)
             scope = "user-read-private user-read-email user-read-playback-state user-modify-playback-state playlist-read-private user-read-recently-played user-read-currently-playing playlist-modify-public playlist-modify-private"
             params = {
                 "client_id": self.SPOTIFY_CLIENT_ID,
                 "response_type": "code",
-                "redirect_uri": self.REDIRECT_URI,
+                "redirect_uri": redirect_uri,
                 "scope": scope,
             }
             response = requests.get(self.AUTH_URL, params=params)
             auth_url = response.url
-            return redirect(auth_url)
+            print(f"{response=}")
+            return (
+                {
+                    "auth_url": auth_url,
+                },
+                200,
+            )
 
         @bp.route("/callback")
-        @login_required
         def callback():
             code = request.args.get("code")
+            redirect_uri = request.args.get("redirect_uri", self.REDIRECT_URI)
             auth_options = {
                 "code": code,
-                "redirect_uri": self.REDIRECT_URI,
+                "redirect_uri": redirect_uri,
                 "grant_type": "authorization_code",
             }
             response = requests.post(
@@ -48,6 +55,8 @@ class SpotifyRoutes:
                 data=auth_options,
                 auth=(self.SPOTIFY_CLIENT_ID, self.SPOTIFY_SECRET),
             )
+            print(f"{response.json()=}")
+            print(f"{session.keys()=}")
             if response.status_code == 200:
                 token_info = response.json()
                 FirebaseHelper.get_instance().db.child("users").child(
@@ -58,7 +67,7 @@ class SpotifyRoutes:
                 session["expires_in"] = (
                     datetime.now().timestamp() + token_info["expires_in"]
                 )
-                return redirect("/profile")
+                return ({"message": "success"}, 200)
             return jsonify({"error": "Failed to get access token"}), 400
 
         @bp.route("/spotifytoken")
