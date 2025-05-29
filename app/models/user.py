@@ -9,6 +9,14 @@ class User(Base):
     email: str
     uid: str
 
+    @staticmethod
+    def from_json(json_data: dict) -> "User":
+        name = json_data["name"]
+        email = json_data["email"]
+        uid = json_data["uid"]
+
+        return User(name=name, email=email, uid=uid)
+
 
 @dataclass
 class SpotifyUser(Base):

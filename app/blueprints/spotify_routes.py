@@ -2,13 +2,12 @@ import os
 from datetime import datetime
 
 import requests
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, request, session
 from helpers import FirebaseHelper, active_spotify_session_required, login_required
 from models import (
     AuthUrlResponse,
+    DataResponse,
     ErrorResponse,
-    Playlist,
-    PlaylistResponse,
     StandardResponse,
     TokenInfoResponse,
 )
@@ -110,11 +109,8 @@ class SpotifyRoutes:
             }
             response = requests.get(PLAYLIST_URL, headers=headers)
             if response.status_code == 200:
-                # TODO
                 playlist_data = response.json()
-                playlist = Playlist.extract_playlist(playlist_data)
-                playlist = Playlist()
-                return PlaylistResponse(playlist=playlist).build()
+                return DataResponse(data=playlist_data).build()
             return ErrorResponse(error="Failed to get playlist data").build()
 
         @bp.route("/playlists/tracks")
@@ -134,9 +130,8 @@ class SpotifyRoutes:
             }
             response = requests.get(PLAYLIST_TRACKS_URL, headers=headers, params=params)
             if response.status_code == 200:
-                # TODO
                 tracks_data = response.json()
-                return jsonify(tracks_data)
+                return DataResponse(data=tracks_data).build()
             return ErrorResponse(error="Failed to get playlist tracks data").build()
 
         @bp.route("/me/player", methods=["GET"])
@@ -148,9 +143,8 @@ class SpotifyRoutes:
             }
             response = requests.get(f"{self.API_BASE_URL}/me/player", headers=headers)
             if response.status_code == 200:
-                # TODO
                 playback_data = response.json()
-                return jsonify(playback_data)
+                return DataResponse(data=playback_data).build()
             return ErrorResponse(error="Failed to get current playback data").build()
 
         @bp.route("/me/player", methods=["PUT"])
@@ -185,9 +179,8 @@ class SpotifyRoutes:
                 f"{self.API_BASE_URL}/me/player/devices", headers=headers
             )
             if response.status_code == 200:
-                # TODO
                 devices_data = response.json()
-                return jsonify(devices_data)
+                return DataResponse(devices_data).build()
             return ErrorResponse(error="Failed to get available devices").build()
 
         @bp.route("/me/player/currently-playing", methods=["GET"])
@@ -201,9 +194,8 @@ class SpotifyRoutes:
                 f"{self.API_BASE_URL}/me/player/currently-playing", headers=headers
             )
             if response.status_code == 200:
-                # TODO
                 track_data = response.json()
-                return jsonify(track_data)
+                return DataResponse(track_data).build()
             return ErrorResponse(
                 error="Failed to get currently playing track",
             ).build()
@@ -395,9 +387,8 @@ class SpotifyRoutes:
                 params=params,
             )
             if response.status_code == 200:
-                # TODO
                 tracks_data = response.json()
-                return jsonify(tracks_data)
+                return DataResponse(data=tracks_data).build()
             return ErrorResponse(error="Failed to get recently played tracks").build()
 
         @bp.route("/me/player/queue", methods=["GET"])
@@ -412,9 +403,8 @@ class SpotifyRoutes:
                 headers=headers,
             )
             if response.status_code == 200:
-                # TODO
                 queue_data = response.json()
-                return jsonify(queue_data)
+                return DataResponse(data=queue_data).build()
             return ErrorResponse(error="Failed to get user's queue").build()
 
         @bp.route("/me/player/queue", methods=["POST"])
@@ -448,9 +438,8 @@ class SpotifyRoutes:
                 headers=headers,
             )
             if response.status_code == 200:
-                # TODO
                 user_data = response.json()
-                return jsonify(user_data)
+                return DataResponse(data=user_data).build()
             return ErrorResponse(error="Failed to get user's profile").build()
 
         @bp.route("/playlists/tracks", methods=["POST"])
@@ -487,7 +476,6 @@ class SpotifyRoutes:
                 headers=headers,
             )
             if response.status_code == 200:
-                # TODO
                 artist_data = response.json()
-                return jsonify(artist_data)
+                return DataResponse(data=artist_data).build()
             return ErrorResponse(error="Failed to get artist data").build()

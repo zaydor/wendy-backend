@@ -8,10 +8,7 @@ from helpers import (
     login_required,
     validate_form,
 )
-from models import UserResponse
-
-from app.models.responses import ErrorResponse, StandardResponse
-from app.models.user import User
+from models import DataResponse, ErrorResponse, StandardResponse
 
 
 class AuthRoutes:
@@ -53,9 +50,13 @@ class AuthRoutes:
                 }
                 db.child("users").child(session["uid"]).set(data)
 
-                user = User(name=data["name"], email=data["email"], uid=data["uid"])
+                user_data = {
+                    "name": session["name"],
+                    "email": session["email"],
+                    "uid": session["uid"],
+                }
 
-                return UserResponse(message="Login successful", user=user).build()
+                return DataResponse(message="Login successful", data=user_data).build()
             except Exception as e:
                 return ErrorResponse(
                     message="Registration failed", status=401, error=str(e)
@@ -88,11 +89,13 @@ class AuthRoutes:
                 else:
                     session["name"] = "User"
 
-                user = User(
-                    name=session["name"], email=session["email"], uid=session["uid"]
-                )
+                user_data = {
+                    "name": session["name"],
+                    "email": session["email"],
+                    "uid": session["uid"],
+                }
 
-                return UserResponse(message="Login successful", user=user).build()
+                return DataResponse(message="Login successful", data=user_data).build()
             except Exception as e:
                 return ErrorResponse(
                     message="Login failed", status=401, error=str(e)
@@ -110,7 +113,9 @@ class AuthRoutes:
         @bp.route("/me")
         @login_required
         def me():
-            user = User(
-                name=session["name"], email=session["email"], uid=session["uid"]
-            )
-            return UserResponse(user=user).build()
+            user_data = {
+                "name": session["name"],
+                "email": session["email"],
+                "uid": session["uid"],
+            }
+            return DataResponse(data=user_data).build()

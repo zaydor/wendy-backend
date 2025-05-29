@@ -1,4 +1,4 @@
-from models import Playlist, User
+from models import Base
 
 
 class StandardResponse:
@@ -18,16 +18,6 @@ class ErrorResponse(StandardResponse):
 
     def build(self) -> tuple[dict, int]:
         self.response_body["error"] = self.error
-        return super().build()
-
-
-class UserResponse(StandardResponse):
-    def __init__(self, message: str, status: int, user: User) -> None:
-        super().__init__(message=message, status=status)
-        self.user = user
-
-    def build(self) -> tuple[dict, int]:
-        self.response_body["user"] = self.user.to_json()
         return super().build()
 
 
@@ -51,11 +41,11 @@ class TokenInfoResponse(StandardResponse):
         return super().build()
 
 
-class PlaylistResponse(StandardResponse):
-    def __init__(self, message: str, status: int, playlist: Playlist) -> None:
+class DataResponse(StandardResponse):
+    def __init__(self, message: str, status: int, data: Base) -> None:
         super().__init__(message=message, status=status)
-        self.playlist = playlist
+        self.data = data
 
     def build(self) -> tuple[dict, int]:
-        self.response_body["playlist"] = self.playlist.to_json()
+        self.response_body["data"] = self.data
         return super().build()
