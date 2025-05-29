@@ -17,3 +17,15 @@ class SpotifyUser(Base):
     id: str
     type: str
     uri: str
+
+    @staticmethod
+    def from_json(json_data: dict) -> "SpotifyUser":
+        external_uris = json_data["external_uris"]
+        href = json_data["href"]
+        id = json_data["id"]
+        type = json_data["type"]
+        uri = json_data["uri"]
+
+        return SpotifyUser(
+            external_uris=external_uris, href=href, id=id, type=type, uri=uri
+        )

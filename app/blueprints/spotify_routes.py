@@ -112,6 +112,7 @@ class SpotifyRoutes:
             if response.status_code == 200:
                 # TODO
                 playlist_data = response.json()
+                playlist = Playlist.extract_playlist(playlist_data)
                 playlist = Playlist()
                 return PlaylistResponse(playlist=playlist).build()
             return ErrorResponse(error="Failed to get playlist data").build()
