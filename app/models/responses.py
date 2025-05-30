@@ -36,7 +36,7 @@ class AuthUrlResponse(StandardResponse):
 
 class TokenInfoResponse(StandardResponse):
     def __init__(
-        self, token_info: str, message: str = "Success", status: int = 200
+        self, token_info: dict, message: str = "Success", status: int = 200
     ) -> None:
         super().__init__(message=message, status=status)
         self.token_info = token_info
