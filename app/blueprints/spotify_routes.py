@@ -40,7 +40,6 @@ class SpotifyRoutes:
             }
             response = requests.get(self.AUTH_URL, params=params)
             auth_url = response.url
-            print(f"{response=}")
             return AuthUrlResponse(auth_url=auth_url).build()
 
         @bp.route("/callback")
@@ -57,8 +56,6 @@ class SpotifyRoutes:
                 data=auth_options,
                 auth=(self.SPOTIFY_CLIENT_ID, self.SPOTIFY_SECRET),
             )
-            print(f"{response.json()=}")
-            print(f"{session.keys()=}")
             if response.status_code == 200:
                 token_info = response.json()
                 FirebaseHelper.get_instance().db.child("users").child(

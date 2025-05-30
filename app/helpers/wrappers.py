@@ -8,7 +8,6 @@ from models import ErrorResponse
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        print(f"{session=}")
         if session.get("is_logged_in", False):
             return f(*args, **kwargs)
         return ErrorResponse(status=403, error="User not logged in").build()

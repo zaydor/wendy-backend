@@ -55,7 +55,6 @@ class AuthRoutes:
                     "email": session["email"],
                     "uid": session["uid"],
                 }
-
                 return DataResponse(message="Login successful", data=user_data).build()
             except Exception as e:
                 return ErrorResponse(

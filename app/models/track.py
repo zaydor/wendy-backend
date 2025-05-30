@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 
-from models import Album, Artist, Base
+from .album import Album
+from .artist import Artist
+from .base import Base
 
 
 @dataclass

@@ -1,18 +1,19 @@
-from models import Base
-
-
 class StandardResponse:
     def __init__(self, message: str = "Success", status: int = 200) -> None:
         self.message = message
         self.status = status
-        self.response_body = {"message": message}
+        self.response_body = {
+            "status": self.status,
+            "message": message,
+            "Access-Control-Allow-Credentials": "true",
+        }
 
     def build(self) -> tuple[dict, int]:
         return (self.response_body, self.status)
 
 
 class ErrorResponse(StandardResponse):
-    def __init__(self, error: str, message: str = "Failure", status: int = 400):
+    def __init__(self, error: str, message: str = "Failure", status: int = 400) -> None:
         super().__init__(message=message, status=status)
         self.error = error
 
@@ -22,7 +23,9 @@ class ErrorResponse(StandardResponse):
 
 
 class AuthUrlResponse(StandardResponse):
-    def __init__(self, message: str, status: int, auth_url: str) -> None:
+    def __init__(
+        self, auth_url: str, message: str = "Success", status: int = 200
+    ) -> None:
         super().__init__(message=message, status=status)
         self.auth_url = auth_url
 
@@ -32,7 +35,9 @@ class AuthUrlResponse(StandardResponse):
 
 
 class TokenInfoResponse(StandardResponse):
-    def __init__(self, message: str, status: int, token_info: str) -> None:
+    def __init__(
+        self, token_info: str, message: str = "Success", status: int = 200
+    ) -> None:
         super().__init__(message=message, status=status)
         self.token_info = token_info
 
@@ -42,9 +47,9 @@ class TokenInfoResponse(StandardResponse):
 
 
 class DataResponse(StandardResponse):
-    def __init__(self, message: str, status: int, data: Base) -> None:
+    def __init__(self, data: dict, message: str = "Success", status: int = 200) -> None:
         super().__init__(message=message, status=status)
-        self.data = data
+        self.data = data if data is not None else {}
 
     def build(self) -> tuple[dict, int]:
         self.response_body["data"] = self.data

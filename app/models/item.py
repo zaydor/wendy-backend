@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 
-from models import Base, SpotifyUser, Track
+from .base import Base
+from .track import Track
+from .user import SpotifyUser
 
 
 @dataclass
