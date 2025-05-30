@@ -8,6 +8,7 @@ from helpers import (
     login_required,
     validate_form,
 )
+from models import DataResponse, ErrorResponse, StandardResponse
 
 
 class AuthRoutes:
@@ -48,27 +49,17 @@ class AuthRoutes:
                     "last_logged_in": datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
                 }
                 db.child("users").child(session["uid"]).set(data)
-                return (
-                    {
-                        "Access-Control-Allow-Credentials": "true",
-                        "message": "Login successful",
-                        "user": {
-                            "name": session["name"],
-                            "email": session["email"],
-                            "uid": session["uid"],
-                        },
-                    },
-                    200,
-                )
+
+                user_data = {
+                    "name": session["name"],
+                    "email": session["email"],
+                    "uid": session["uid"],
+                }
+                return DataResponse(message="Login successful", data=user_data).build()
             except Exception as e:
-                return (
-                    {
-                        "Access-Control-Allow-Credentials": "true",
-                        "message": "Register failed",
-                        "error": str(e),
-                    },
-                    401,
-                )
+                return ErrorResponse(
+                    message="Registration failed", status=401, error=str(e)
+                ).build()
 
         @bp.route("/login", methods=["POST"])
         @validate_form(LoginForm)
@@ -97,27 +88,17 @@ class AuthRoutes:
                 else:
                     session["name"] = "User"
 
-                return (
-                    {
-                        "Access-Control-Allow-Credentials": "true",
-                        "message": "Login successful",
-                        "user": {
-                            "name": session["name"],
-                            "email": session["email"],
-                            "uid": session["uid"],
-                        },
-                    },
-                    200,
-                )
+                user_data = {
+                    "name": session["name"],
+                    "email": session["email"],
+                    "uid": session["uid"],
+                }
+
+                return DataResponse(message="Login successful", data=user_data).build()
             except Exception as e:
-                return (
-                    {
-                        "Access-Control-Allow-Credentials": "true",
-                        "message": "Login failed",
-                        "error": str(e),
-                    },
-                    401,
-                )
+                return ErrorResponse(
+                    message="Login failed", status=401, error=str(e)
+                ).build()
 
         @bp.route("/logout")
         @login_required
@@ -126,41 +107,14 @@ class AuthRoutes:
                 {"last_logged_out": datetime.now().strftime("%m/%d/%Y, %H:%M:%S")}
             )
             session["is_logged_in"] = False
-            return (
-                {
-                    "Access-Control-Allow-Credentials": "true",
-                    "message": "Logout successful",
-                },
-                200,
-            )
+            return StandardResponse(message="Logout successful").build()
 
         @bp.route("/me")
         @login_required
         def me():
-            return (
-                {
-                    "user": {
-                        "name": session["name"],
-                        "email": session["email"],
-                        "uid": session["uid"],
-                    },
-                },
-                200,
-            )
-
-        # @bp.route("/profile")
-        # @login_required
-        # def profile():
-        #     return f"""
-        #     <h1>Hello, {session.get("name")}</h1>
-        #     <br>
-        #     <a href='/logout'>Logout</a>
-        #     <br>
-        #     <a href='/authorize'>Authorize Spotify</a>
-        #     <br>
-        #     <a href='/spotifytoken'>Get Spotify Token</a>
-        #     <br>
-        #     <a href='/playlists'>Get Playlists</a>
-        #     <br>
-        #     <a href='/playlists/tracks'>Get Playlist Tracks</a>
-        #     """
+            user_data = {
+                "name": session["name"],
+                "email": session["email"],
+                "uid": session["uid"],
+            }
+            return DataResponse(data=user_data).build()
