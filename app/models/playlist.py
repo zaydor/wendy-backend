@@ -44,7 +44,7 @@ class Playlist(Base):
 
         return Playlist(
             collaborative=collaborative,
-            decription=description,
+            description=description,
             external_urls=external_urls,
             followers=followers,
             href=href,
