@@ -32,7 +32,16 @@ def validate_form(form_class):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            form = form_class(request.form)
+            # Handle both JSON and form data
+            if request.is_json:
+                # Convert JSON to form-compatible data
+                json_data = request.get_json()
+                from werkzeug.datastructures import MultiDict
+                form_data = MultiDict(json_data)
+            else:
+                form_data = request.form
+            
+            form = form_class(form_data)
             if not form.validate():
                 return ErrorResponse(
                     message="Form validation failed", error=form.errors, status=402
