@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import Blueprint, session
+from flask import Blueprint, session, request
 from helpers import (
     FirebaseHelper,
     LoginForm,
@@ -37,12 +37,18 @@ class AuthRoutes:
             password = form.password.data
             name = form.name.data
             try:
-                auth.create_user_with_email_and_password(email, password)
-                user = auth.sign_in_with_email_and_password(email, password)
+                # Create user with Admin SDK
+                user_record = auth.create_user(
+                    email=email,
+                    password=password,
+                    display_name=name
+                )
+                
                 session["is_logged_in"] = True
                 session["email"] = email
-                session["uid"] = user["localId"]
+                session["uid"] = user_record.uid
                 session["name"] = name
+                
                 data = {
                     "name": name,
                     "email": email,
@@ -55,7 +61,7 @@ class AuthRoutes:
                     "email": session["email"],
                     "uid": session["uid"],
                 }
-                return DataResponse(message="Login successful", data=user_data).build()
+                return DataResponse(message="Registration successful", data=user_data).build()
             except Exception as e:
                 return ErrorResponse(
                     message="Registration failed", status=401, error=str(e)
@@ -66,14 +72,15 @@ class AuthRoutes:
         def login(form):
             email = form.email.data
             password = form.password.data
-            try:
-                user = auth.sign_in_with_email_and_password(email, password)
-
+            try:                
+                # Get user details with Admin SDK
+                user_record = auth.get_user_by_email(email)
+                
                 session["is_logged_in"] = True
                 session["email"] = email
-                session["uid"] = user["localId"]
+                session["uid"] = user_record.uid
 
-                data = db.child("users").get().val()
+                data = db.child("users").get()
 
                 if data and session["uid"] in data:
                     session["name"] = data[session["uid"]].get("name", "User")
@@ -86,8 +93,8 @@ class AuthRoutes:
                         }
                     )
                 else:
-                    session["name"] = "User"
-
+                    session["name"] = user_record.display_name or "User"
+                
                 user_data = {
                     "name": session["name"],
                     "email": session["email"],
@@ -101,12 +108,15 @@ class AuthRoutes:
                 ).build()
 
         @bp.route("/logout")
-        @login_required
         def logout():
-            db.child("users").child(session["uid"]).update(
-                {"last_logged_out": datetime.now().strftime("%m/%d/%Y, %H:%M:%S")}
-            )
-            session["is_logged_in"] = False
+            # Only update database if user was actually logged in
+            if session.get("is_logged_in") and session.get("uid"):
+                db.child("users").child(session["uid"]).update(
+                    {"last_logged_out": datetime.now().strftime("%m/%d/%Y, %H:%M:%S")}
+                )
+            
+            # Clear the session completely
+            session.clear()
             return StandardResponse(message="Logout successful").build()
 
         @bp.route("/me")
